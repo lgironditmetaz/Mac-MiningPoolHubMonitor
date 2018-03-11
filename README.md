@@ -1,7 +1,7 @@
-<h1 align="center">
+<p align="center">
   <img src="Art/icon.iconset/icon_128x128.png" alt="Screenshot"/>
-  <span>MiningPoolHub Monitor</span>
-</h1>
+  <h1 align="center">MiningPoolHub Monitor for macOS</h1>
+</p>
 
 ## Introduction
 
@@ -20,6 +20,12 @@ Don't hesitate to audit the code if you want to know precisely what the software
 * Displays all your wallets balances using the _MiningPoolHub_ API.
 * Displays your main coin (the coin you are auto exchanging into) balance in the toolbar.
 * Displays a balance approximation in your preferred fiat currency for your main coin.
+
+## Official releases
+
+Please note that their is **NO OFFICIAL BINARY RELEASE** of this software for the moment.
+
+You can make your own build using [Apple Xcode](https://itunes.apple.com/fr/app/xcode/id497799835?l=en&mt=12) _(available for free on the Mac App Store)_ and the source code provided here.
 
 ## License
 
@@ -47,4 +53,4 @@ This sample is distributed under the _MIT License_:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-This repository contains two files from Apple's _GenericKeychain_ sample, these file are covered by the license that can be found in _MiningPoolHub Monitor/Utils/KeychainPasswordItem/LICENSE.txt_.
+This repository contains two files from Apple's _GenericKeychain_ sample, these files are covered by the license that can be found in _MiningPoolHub Monitor/Utils/KeychainPasswordItem/LICENSE.txt_.
