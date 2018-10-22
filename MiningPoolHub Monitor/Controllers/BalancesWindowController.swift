@@ -10,6 +10,21 @@ import Cocoa
 
 class BalancesWindowController : NSWindowController {
     
+    class BalanceSummary {
+        
+        public let coinSymbol: String
+        public let coinBalance: Double
+        public let fiatSymbol: String
+        public let fiatBalance: Double
+        
+        init(coinSymbol: String, coinBalance: Double, fiatSymbol: String, fiatBalance: Double) {
+            self.coinSymbol = coinSymbol
+            self.coinBalance = coinBalance
+            self.fiatSymbol = fiatSymbol
+            self.fiatBalance = fiatBalance
+        }
+    }
+    
     @IBOutlet weak var refreshIndicator: NSProgressIndicator!
     @IBOutlet weak var refreshButton: NSButton!
     @IBOutlet weak var balanceLabel: NSTextField!
@@ -17,6 +32,8 @@ class BalancesWindowController : NSWindowController {
     private var refreshInProgress = false
     private var lastSuccessfulRefresh: Date?
     private let autoRefreshTimerInterval: TimeInterval = 60.0
+    
+    private var balanceSummary: BalanceSummary?
     
     private lazy var balancesViewController = {
        return self.contentViewController as! BalancesViewController
@@ -50,19 +67,31 @@ class BalancesWindowController : NSWindowController {
     
     private func enableRefreshButton(_ enable: Bool) {
         refreshButton.isEnabled = enable
+        self.touchBar = nil
     }
     
     private func showBalanceLabel(_ show: Bool) {
         balanceLabel.isHidden = !show
     }
     
+    private func balanceLabelDescription() -> String {
+        guard let balanceSummary = self.balanceSummary else {
+            return ""
+        }
+        
+        let coinBalanceString = BalanceFormatter.shared.string(balance: balanceSummary.coinBalance, currency: .coin)
+        let fiatBalanceString = BalanceFormatter.shared.string(balance: balanceSummary.fiatBalance, currency: .fiat)
+        
+        return "\(balanceSummary.coinSymbol) \(coinBalanceString) • \(balanceSummary.fiatSymbol) \(fiatBalanceString)"
+    }
+    
     private func updateBalanceLabel(coinSymbol: String, coinBalance: Double, fiatSymbol: String, fiatBalance: Double) {
+        self.balanceSummary = BalanceSummary(coinSymbol: coinSymbol, coinBalance: coinBalance, fiatSymbol: fiatSymbol, fiatBalance: fiatBalance)
+        
         showBalanceLabel(true)
+        balanceLabel.stringValue = balanceLabelDescription()
         
-        let coinBalanceString = BalanceFormatter.shared.string(balance: coinBalance, currency: .coin)
-        let fiatBalanceString = BalanceFormatter.shared.string(balance: fiatBalance, currency: .fiat)
-        
-        balanceLabel.stringValue = "\(coinSymbol) \(coinBalanceString) • \(fiatSymbol) \(fiatBalanceString)"
+        self.touchBar = nil
     }
     
     // MARK: - Toolbar actions
@@ -103,7 +132,7 @@ class BalancesWindowController : NSWindowController {
     
     // MARK: - Webservices
     
-    private func refreshBalances() {
+    @objc func refreshBalances() {
         
         // Disabling refresh button
         enableRefreshButton(false)
@@ -200,6 +229,41 @@ class BalancesWindowController : NSWindowController {
                 // The result can be displayed to the user
                 self.balancesViewController.balances = balances
             }
+        }
+    }
+    
+}
+
+extension NSTouchBarItem.Identifier {
+    static let balanceLabel = NSTouchBarItem.Identifier("org.lgdlab.macos.MiningPoolHub-Monitor.balanceLabel")
+    static let refreshButton = NSTouchBarItem.Identifier("org.lgdlab.macos.MiningPoolHub-Monitor.refreshButton")
+}
+
+extension BalancesWindowController: NSTouchBarDelegate {
+    
+    override func makeTouchBar() -> NSTouchBar? {
+        let touchBar = NSTouchBar()
+        touchBar.delegate = self
+        touchBar.defaultItemIdentifiers = [.flexibleSpace, .balanceLabel, .flexibleSpace, .refreshButton]
+        return touchBar
+    }
+    
+    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
+        switch identifier {
+        case NSTouchBarItem.Identifier.refreshButton:
+            let item = NSCustomTouchBarItem(identifier: identifier)
+            let button = NSButton(image: NSImage(named: .refreshTemplate)!, target: self, action: #selector(refreshBalances))
+            button.isEnabled = refreshButton.isEnabled
+            item.view = button
+            return item
+            
+        case NSTouchBarItem.Identifier.balanceLabel:
+            let item = NSCustomTouchBarItem(identifier: identifier)
+            item.view = NSTextField(labelWithString: balanceLabelDescription())
+            return item
+            
+        default:
+            return nil
         }
     }
     
